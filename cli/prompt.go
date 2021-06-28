@@ -13,6 +13,8 @@ var menu = map[string]string{
 	"ALL": "All",
 	"DEFAULT": "Default",
 	"CHANGE": "Change Default Directory",
+	"ADD": "Add Path",
+	"REMOVE": "Remove Path",
 	"EXIT": "Exit",
 }
 
@@ -20,6 +22,7 @@ var templates = &promptui.SelectTemplates{
 	Label: 	"\U0001F929 {{ . | cyan}}",
 	Active: "\U000025B6 {{ . | green }}",
 }
+
 
 func changeDefaultPathPrompt() string {
 	paths := paths.GetPaths()
@@ -60,7 +63,7 @@ func addPathPrompt() string {
 		ls := exec.Command("ls", input)
 		_, err := ls.Output()
 		if err != nil {
-			return errors.New("Invalid Path")
+			return errors.New("INVALID PATH")
 		}
 		return nil
 	}
@@ -71,6 +74,21 @@ func addPathPrompt() string {
 	}
 
 	result, _ := prompt.Run()
+
+	return result
+}
+
+func removePathPrompt() string {
+	items := paths.GetPaths()
+
+	prompt := promptui.Select{
+		Label: "Defalt Path 설정",
+		Items: items,
+		Size: 5,
+		Templates: templates,
+	}
+
+	_, result, _ := prompt.Run()
 
 	return result
 }
@@ -102,9 +120,9 @@ func initialPathSelectPrompt() string {
 }
 
 
-func SelectMenuPrompt() string {
-	defaultPath := Path().GetDefaultPath()
-	items := []string{menu["ALL"], menu["DEFAULT"], menu["CHANGE"], menu["EXIT"]}
+func selectMenuPrompt() string {
+	defaultPath := Path().getDefaultPath()
+	items := []string{menu["ALL"], menu["DEFAULT"], menu["CHANGE"], menu["ADD"], menu["REMOVE"], menu["EXIT"]}
 	prompt := promptui.Select{
 		Label: fmt.Sprintf("Select Menu (default: %s)", defaultPath),
 		Items: items,

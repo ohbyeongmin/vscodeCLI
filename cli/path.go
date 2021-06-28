@@ -25,7 +25,7 @@ func isExistPathFile() bool {
 	return !os.IsNotExist(err)
 }
 
-func (p *pathContainer) ChangeDefaultPath(path string) {
+func (p *pathContainer) changeDefaultPath(path string) {
 	for _, pathItem := range p.pathItems {
 		if pathItem.Path != path {
 			pathItem.DefaultPath = false
@@ -35,7 +35,7 @@ func (p *pathContainer) ChangeDefaultPath(path string) {
 	} 
 }
 
-func (p *pathContainer) GetDefaultPath() (defaultPath string) {
+func (p *pathContainer) getDefaultPath() (defaultPath string) {
 	for _, pathItem := range p.pathItems {
 		if pathItem.DefaultPath {
 			defaultPath = pathItem.Path
@@ -56,7 +56,7 @@ func Path() *pathContainer {
 	return paths
 }
 
-func (p *pathContainer) SavePathJson() {
+func (p *pathContainer) savePathJson() {
 	file, _ := os.Create(pathJson)
 	err := json.NewEncoder(file).Encode(p.pathItems)
 	defer file.Close()
@@ -65,7 +65,7 @@ func (p *pathContainer) SavePathJson() {
 	}
 }
 
-func (p *pathContainer) AddPath(path string, defaultValue bool) {
+func (p *pathContainer) addPath(path string, defaultValue bool) {
 	pItem := &pathItem{
 		Path: path,
 		DefaultPath: defaultValue,
@@ -73,11 +73,24 @@ func (p *pathContainer) AddPath(path string, defaultValue bool) {
 	p.pathItems = append(p.pathItems, pItem)
 }
 
+func (p *pathContainer) removePath(path string) error {
+	for i, pathItem := range p.pathItems {
+		if pathItem.Path == path {
+			if pathItem.DefaultPath {
+				return errors.New("DEFAULT PATH")
+			}
+			p.pathItems = append(p.pathItems[:i], p.pathItems[i+1:]...)
+			break;
+		}
+	}
+	return nil
+}
+
 func InitialPaths() {
 	paths = &pathContainer{}
 	if !isExistPathFile() {
 		data := initialPathSelectPrompt()
-		paths.AddPath(data, true)
+		paths.addPath(data, true)
 	} else {
 		file, _ := os.Open(pathJson)
 		json.NewDecoder(file).Decode(&paths.pathItems)
