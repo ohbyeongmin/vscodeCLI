@@ -1,31 +1,52 @@
 package cli
 
 import (
-	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 )
 
+func execProject(project string) {
+	code := exec.Command("code", project)
+	code.Run()
+}
 
-func FindDirectoryPrompt(searchDir string) ([]string ,error) {
-	grep := exec.Command("grep", searchDir)
-	ls := exec.Command("ls", "-t" )//, path)
 
-	pipe, _ := ls.StdoutPipe()
-	defer pipe.Close()
+func findDefaultDirectory(searchDir string) ([]string) {
+	var foundDirs []string
+	path := Path().GetDefaultPath()
 
-	grep.Stdin = pipe
-	ls.Start()
+	
+	searchDir = fmt.Sprintf("*%s*",searchDir)
+	find := exec.Command("find", path, "-maxdepth", "1", "-name", searchDir, "-type", "d")
+	res, _ := find.Output()
 
-	res, _ := grep.Output()
+	stringRes := strings.Fields(string(res[:]))
+	foundDirs = append(foundDirs, stringRes...)
+	
 
-	if len(res) <= 0 {
-		return nil, errors.New("NOT FOUND DIRECTORY")
+	return foundDirs
+}
+
+func findAllDirectory(searchDir string) ([]string) {
+	var foundDirs []string
+
+	paths := paths.GetPaths()
+
+	for _, path := range paths {
+		searchDir = fmt.Sprintf("*%s*",searchDir)
+		find := exec.Command("find", path, "-maxdepth", "1", "-name", searchDir, "-type", "d")
+		res, _ := find.Output()
+
+		if len(res) <= 0 {
+			continue
+		}
+
+		stringRes := strings.Fields(string(res[:]))
+		foundDirs = append(foundDirs, stringRes...)
 	}
 
-	stringRes := string(res[:])
-
-	return strings.Fields(stringRes), nil
+	return foundDirs
 }
 
 func InitializeApp() {
@@ -33,5 +54,28 @@ func InitializeApp() {
 }
 
 func Start(){
-	
+	InitialPaths()
+	var searchDir string
+	var searchDirResults []string
+	for {
+		switch SelectMenuPrompt() {
+			case menu["ALL"]:
+				searchDir = searchDirPrompt()
+				searchDirResults = findAllDirectory(searchDir)
+				selectedDir := selectProjectPrompt(searchDirResults)
+				execProject(selectedDir)		
+			case menu["DEFAULT"]:
+				searchDir = searchDirPrompt()
+				searchDirResults = findDefaultDirectory(searchDir)
+				selectedDir := selectProjectPrompt(searchDirResults)
+				execProject(selectedDir)
+			case menu["CHANGE"]:
+				defaultPath := changeDefaultPathPrompt()
+				Path().ChangeDefaultPath(defaultPath)
+			case menu["EXIT"]:
+				defer Path().SavePathJson()
+				return
+		}
+	}
+
 }

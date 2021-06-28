@@ -25,6 +25,16 @@ func isExistPathFile() bool {
 	return !os.IsNotExist(err)
 }
 
+func (p *pathContainer) ChangeDefaultPath(path string) {
+	for _, pathItem := range p.pathItems {
+		if pathItem.Path != path {
+			pathItem.DefaultPath = false
+		} else {
+			pathItem.DefaultPath = true
+		}
+	} 
+}
+
 func (p *pathContainer) GetDefaultPath() (defaultPath string) {
 	for _, pathItem := range p.pathItems {
 		if pathItem.DefaultPath {

@@ -9,10 +9,50 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
+var menu = map[string]string{
+	"ALL": "All",
+	"DEFAULT": "Default",
+	"CHANGE": "Change Default Directory",
+	"EXIT": "Exit",
+}
 
 var templates = &promptui.SelectTemplates{
 	Label: 	"\U0001F929 {{ . | cyan}}",
 	Active: "\U000025B6 {{ . | green }}",
+}
+
+func changeDefaultPathPrompt() string {
+	paths := paths.GetPaths()
+	prompt := promptui.Select{
+		Label: "Select Directory",
+		Items: paths,
+		Size: 10,
+		Templates: templates,
+	}
+	_, result, _ := prompt.Run()
+	return result
+}
+
+func selectProjectPrompt(directories []string) string {
+	prompt := promptui.Select{
+		Label: "Select Directory",
+		Items: directories,
+		Size: 10,
+		Templates: templates,
+	}
+	_, result, _ := prompt.Run()
+
+	return result
+}
+
+func searchDirPrompt() string {
+	prompt := promptui.Prompt {
+		Label: "프로젝트 이름",
+	}
+
+	result, _ := prompt.Run()
+
+	return result
 }
 
 func addPathPrompt() string {
@@ -61,30 +101,10 @@ func initialPathSelectPrompt() string {
 	return initialPath
 }
 
-func ChangeDefaultPathPrompt(dirList []string) (string, error) {
-	items := []string{"CHANGE PATH"}
-	items = append(items, dirList...)
 
-	prompt := promptui.Select{
-		Label: "Select Directory",
-		Items: items,
-		Size: 10,
-		Templates: templates,
-	}
-	_, result, err := prompt.Run()
-
-	if err != nil {
-		return "", err
-	}
-
-	return result, nil
-}
-
-
-
-func SelectMenuPrompt() {
+func SelectMenuPrompt() string {
 	defaultPath := Path().GetDefaultPath()
-	items := []string{"All", "Defalt"}
+	items := []string{menu["ALL"], menu["DEFAULT"], menu["CHANGE"], menu["EXIT"]}
 	prompt := promptui.Select{
 		Label: fmt.Sprintf("Select Menu (default: %s)", defaultPath),
 		Items: items,
@@ -92,5 +112,5 @@ func SelectMenuPrompt() {
 		Templates: templates,
 	}
 	_, result, _ := prompt.Run()
-	fmt.Println(result)
+	return result
 }
